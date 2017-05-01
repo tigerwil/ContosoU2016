@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContosoU2016.Data;
 using ContosoU2016.Models;
+using ContosoU2016.Helpers;
 
 namespace ContosoU2016.Controllers
 {
@@ -22,11 +23,16 @@ namespace ContosoU2016.Controllers
         // GET: Student
         public async Task<IActionResult> Index(string sortOrder, 
                                                string searchString, 
-                                               string currentFilter)
+                                               string currentFilter,
+                                               int? page)
         {
             //sortOrder:  for Sorting
             //searchString:  for Searching 
             //currentFilter:  to keep current search 
+            //page: for paging (optional argument)
+
+
+            ViewData["CurrentSort"] = sortOrder;
 
             //return View(await _context.Students.ToListAsync());
             //mwilliams:  add paging, sorting and filtering functionality
@@ -48,6 +54,15 @@ namespace ContosoU2016.Controllers
             if (searchString == null)
             {
                 searchString = currentFilter;
+            }
+            else
+            {
+                page = 1;//Start on first page
+                /*
+                 * If the searchstring is changed during paging, the page has to be reset to 1
+                 * because the new filter can result in different data to display
+                 * 
+                 */
             }
             
 
@@ -96,8 +111,12 @@ namespace ContosoU2016.Controllers
 
             }
 
-            return View(await students.ToListAsync());
-
+            //mwilliams:  Changed to use paginated list
+            //return View(await students.ToListAsync());
+            int pageSize = 2;
+            return View(await PaginatedList<Student>.CreateAsync(students, page ?? 1, pageSize));
+            //double question (??) is the null-coalescing operator
+            //page the value of page unless page is null, in which case it is assigned the value of 1
 
         }
 

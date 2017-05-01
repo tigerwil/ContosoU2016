@@ -1,4 +1,8 @@
-@model IEnumerable<ContosoU2016.Models.Student>
+@*@model IEnumerable<ContosoU2016.Models.Student>*@
+@using ContosoU2016.Helpers;
+@using ContosoU2016.Models;
+
+@model PaginatedList<Student>
 
 @{
     ViewData["Title"] = "Index";
@@ -72,3 +76,23 @@
 }
     </tbody>
 </table>
+
+@* mwilliams:  Add paging controls *@
+@{ 
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+<span class="page-number" style="color:red">Page @(Model.TotalPages < Model.PageIndex ? 0 : Model.PageIndex) of @Model.TotalPages</span>
+@* Page 1 of 3 *@
+<a asp-action="Index" 
+   asp-route-sortOrder ="@ViewData["CurrentSort"]"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   asp-route-page="@(Model.PageIndex -1)" class="btn btn-info @prevDisabled">
+    <i class="glyphicon glyphicon-triangle-left"></i> Previous</a>
+
+<a asp-action="Index"
+   asp-route-sortOrder ="@ViewData["CurrentSort"]"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   asp-route-page="@(Model.PageIndex +1)"class="btn btn-info @nextDisabled">
+    <i class="glyphicon glyphicon-triangle-right"></i> Next</a>
