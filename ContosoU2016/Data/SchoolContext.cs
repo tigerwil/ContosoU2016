@@ -21,11 +21,16 @@ namespace ContosoU2016.Data
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Course> Courses { get; set; }
 
+        //Complex Data Model
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<OfficeAssignment> OfficeAssignments { get; set; }
+        public DbSet<CourseAssignment> CourseAssignments { get; set; }
+
         /*
          * When the database is created, EF creates tables that have names the same as the DbSet 
          * property names.  Property names for collections are typically plural (Students rather 
          * than Student).  Developers disagree about whether table names should be pluralized or not.
-         * For this demmo, let's override the default behavior
+         * For this demo, let's override the default behavior
          * 
          */
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -35,6 +40,15 @@ namespace ContosoU2016.Data
             modelBuilder.Entity<Student>().ToTable("Student");
             modelBuilder.Entity<Instructor>().ToTable("Instructor");
             modelBuilder.Entity<Person>().ToTable("Person");
+
+            //Complex Data Model
+            modelBuilder.Entity<OfficeAssignment>().ToTable("OfficeAssignment");
+            modelBuilder.Entity<CourseAssignment>().ToTable("CourseAssignment");
+            modelBuilder.Entity<Department>().ToTable("Department");
+
+            //Composite PK on CourseAssignment (CourseID, InstructorID)
+            modelBuilder.Entity<CourseAssignment>()
+                .HasKey(c => new { c.CourseID, c.InstructorID });
         }
 
     }
