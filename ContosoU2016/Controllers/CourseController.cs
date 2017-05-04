@@ -29,7 +29,7 @@ namespace ContosoU2016.Controllers
 
             //Add ViewData for use within View
             ViewData["SelectedDepartment"] =
-                new SelectList(departments, "DepartmentID", "Name", SelectedDepartment);
+                new SelectList(departments, "DepartmentID", "Name",SelectedDepartment);
             //Retrieve the value of incoming parameter (SelectedDepartment)
             int departmentId = SelectedDepartment.GetValueOrDefault();
 
@@ -46,14 +46,21 @@ namespace ContosoU2016.Controllers
 
 
         // GET: Course
-        public async Task<IActionResult> Index()
+        //public async Task<IActionResult> Index()
+        //{
+        //    var schoolContext = _context.Courses.Include(c => c.Department);
+        //    return View(await schoolContext.ToListAsync());
+        //}
+
+        public async Task<IActionResult> Index(int? SelectedDepartment)
         {
-            var schoolContext = _context.Courses.Include(c => c.Department);
-            return View(await schoolContext.ToListAsync());
+            //The SelectedDepartment refers to a Select box (dropdown) within our view 
+            IQueryable<Course> courses = GetCourses(SelectedDepartment);
+            return View(await courses.ToListAsync());
         }
 
-        // GET: Course/Details/5
-        public async Task<IActionResult> Details(int? id)
+            // GET: Course/Details/5
+            public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
