@@ -1,4 +1,6 @@
-﻿namespace ContosoU2016.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ContosoU2016.Models
 {
     public class Enrollment
     {
@@ -26,6 +28,8 @@
          * 
          */
 
+        //Show "No Grade" instead of blank when Grade is NULL
+        [DisplayFormat(NullDisplayText ="No Grade Yet")]
         public Grade? Grade { get; set; }//? nullable:  Because we don't get a grade when registering
 
 
