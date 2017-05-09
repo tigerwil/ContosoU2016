@@ -17,7 +17,7 @@ namespace ContosoU2016.Controllers
 
         public InstructorController(SchoolContext context)
         {
-            _context = context;    
+            _context = context;
         }
 
         // GET: Instructor
@@ -26,13 +26,13 @@ namespace ContosoU2016.Controllers
         {
             var viewModel = new InstructorIndexData();
             viewModel.Instructors = await _context.Instructors
-                .Include(i=>i.OfficeAssignment)//Include Offices assigned to instructor
-                //================================ Enrollments ===================================
-                .Include(i=>i.Courses)//within courses property load the enrollments
-                  .ThenInclude(i=>i.Course)//have to get the course entity out of the Courses join entity
-                     .ThenInclude(i=>i.Department)
-                .OrderBy(i=>i.LastName)//Sort by instructor Last name asc
-                //.AsNoTracking()//Improve performance 
+                .Include(i => i.OfficeAssignment)//Include Offices assigned to instructor
+                                                 //================================ Enrollments ===================================
+                .Include(i => i.Courses)//within courses property load the enrollments
+                  .ThenInclude(i => i.Course)//have to get the course entity out of the Courses join entity
+                     .ThenInclude(i => i.Department)
+                .OrderBy(i => i.LastName)//Sort by instructor Last name asc
+                                         //.AsNoTracking()//Improve performance 
                 .ToListAsync();
 
             //=========================== INSTRUCTOR SELECTED =================================
@@ -96,6 +96,7 @@ namespace ContosoU2016.Controllers
             }
 
             var instructor = await _context.Instructors
+                .Include(i=>i.OfficeAssignment) //mwilliams:  include office
                 .SingleOrDefaultAsync(m => m.ID == id);
             if (instructor == null)
             {
@@ -110,7 +111,37 @@ namespace ContosoU2016.Controllers
         {
             var instructor = new Instructor();
             instructor.Courses = new List<CourseAssignment>();
+            //Populate the AssignedCourseData View Model 
+            PopulateAssignedCourseData(instructor);
             return View();
+        }
+
+        private void PopulateAssignedCourseData(Instructor instructor)
+        {
+            //get all courses
+            var allCourses = _context.Courses;
+
+            //create a hashset of instructor courses (HashSet of integers populated with course id)
+            var instructorCourses = new HashSet<int>(instructor.Courses.Select(c => c.CourseID));
+
+            //Create and populate the AssignedCourseData ViewModel
+            var viewModel = new List<AssignedCourseData>();//create
+
+
+            //populate it once for each of the courses within allCourses
+            foreach (var course in allCourses)
+            {
+                viewModel.Add(new AssignedCourseData
+                {
+                    CourseID = course.CourseID,
+                    Title = course.Title,
+                    Assigned = instructorCourses.Contains(course.CourseID)                    
+                });
+            }
+
+            //Save the viewModel within the ViewData object for use within View
+            ViewData["Courses"] = viewModel;
+
         }
 
         // POST: Instructor/Create
@@ -118,8 +149,26 @@ namespace ContosoU2016.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("HireDate,LastName,FirstName,Email, OfficeAssignment")] Instructor instructor)
+        public async Task<IActionResult> Create([Bind("HireDate,LastName,FirstName,Email, OfficeAssignment")] Instructor instructor, string[] selectedCourses)
         {
+            //mwilliams:  added string[] selectedCourses method argument for many course assignments
+
+            if (selectedCourses != null)
+            {
+                //selectedCourses checkboxes have been checked - Create a new list of CourseAssignment
+                instructor.Courses = new List<CourseAssignment>();
+                //Loop the selectedCourses array
+                foreach (var course in selectedCourses)
+                {
+                    //Populate the CourseAssignment (InstructorID, CourseID)
+                    var courseToAdd = new CourseAssignment
+                    {
+                        InstructorID = instructor.ID,
+                        CourseID = int.Parse(course)
+                    };
+                    instructor.Courses.Add(courseToAdd); //Add the new course to collection
+                }
+            }
             if (ModelState.IsValid)
             {
                 _context.Add(instructor);
@@ -137,11 +186,16 @@ namespace ContosoU2016.Controllers
                 return NotFound();
             }
 
-            var instructor = await _context.Instructors.SingleOrDefaultAsync(m => m.ID == id);
+            var instructor = await _context.Instructors
+                .Include(i=>i.OfficeAssignment)//include office assignment
+                .Include(i=>i.Courses)//include courses for AssignedCourseData viewmodel
+                .SingleOrDefaultAsync(m => m.ID == id);
             if (instructor == null)
             {
                 return NotFound();
             }
+            //Populate the AssignedCourseData View Model 
+            PopulateAssignedCourseData(instructor);
             return View(instructor);
         }
 
@@ -150,34 +204,109 @@ namespace ContosoU2016.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("HireDate,ID,LastName,FirstName,Email")] Instructor instructor)
+        public async Task<IActionResult> Edit(int? id, string[] selectedCourses)
         {
-            if (id != instructor.ID)
+            //mwilliams: Take care of overposting 
+            //           Added selectedCourse string arrary argument
+            if (id ==null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            //find the instructor to update (because of overposting check)
+            var instructorToUpdate = await _context.Instructors
+                .Include(i => i.OfficeAssignment) //include office assignment 
+                .Include(i => i.Courses)//include courses for course assignment
+                .ThenInclude(i => i.Course)//for update of course
+                .SingleOrDefaultAsync(i => i.ID == id); //only one instructor to update (based on id)
+
+            if(await TryUpdateModelAsync<Instructor>(
+                instructorToUpdate,"",i=>i.FirstName, i=>i.LastName, i=>i.HireDate, i=>i.OfficeAssignment))
             {
-                try
+                //check for emtpy string on office location
+                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment.Location))
                 {
-                    _context.Update(instructor);
-                    await _context.SaveChangesAsync();
+                    instructorToUpdate.OfficeAssignment = null;//remove the complete record 
                 }
-                catch (DbUpdateConcurrencyException)
+
+
+                //Update Courses
+                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+
+                //Save changes (try...catch)
+                if (ModelState.IsValid)
                 {
-                    if (!InstructorExists(instructor.ID))
+                    try
                     {
-                        return NotFound();
+                        await _context.SaveChangesAsync();
                     }
-                    else
+                    catch (DbUpdateException /*ex*/)
                     {
-                        throw;
+                        //We could log the error using the ex argument
+                        //Let's simply return a model state error back to the view
+                        ModelState.AddModelError("", "Unable to save changes.");
                     }
+                    return RedirectToAction("Index");
                 }
-                return RedirectToAction("Index");
             }
-            return View(instructor);
+            return View(instructorToUpdate);
+
+        }//end Edit Post
+
+        private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
+        {
+            if (selectedCourses == null)
+            {
+                //If no checkboxes were selected, initialize the Courses navigation property
+                //with an empty collection and return
+                instructorToUpdate.Courses = new List<CourseAssignment>();
+                return;
+            }
+
+            //To facilitate efficient lookups, 2 collections will be stored in HashSet objects
+            //: selectedCourseHS ->  selected course (hashset of checkboxe selections)
+            //: instructorCourses -> instructor courses (hashset of courses assigned to instructor)
+            var selectedCourseHS = new HashSet<string>(selectedCourses);
+            var instructorCourses = new HashSet<int>
+                (instructorToUpdate.Courses.Select(c => c.Course.CourseID));
+
+            //Loop through all courses in the database and check each course against the ones
+            //currently assigned to the instructor versus the ones that were selected in the
+            //view
+            foreach(var course in _context.Courses)//Loop all courses
+            {
+                //CONDITION 1:
+                //If the checkbox for a course was selected but the course isn't in the 
+                //Instructor.Courses navigation property, the course is added to the collection
+                //in the navigation property
+                if (selectedCourseHS.Contains(course.CourseID.ToString()))
+                {
+                    if (!instructorCourses.Contains(course.CourseID))
+                    {
+                        instructorToUpdate.Courses.Add(new CourseAssignment
+                        {
+                            InstructorID = instructorToUpdate.ID,
+                            CourseID = course.CourseID
+                        });
+                    }
+                }
+                //CONDITION 2:
+                //If the check box for a course wasn't selected, but the course is in the 
+                //Instructor.Courses navigation property, the course is removed 
+                //from the navigation property.
+                else
+                {
+                    if (instructorCourses.Contains(course.CourseID))
+                    {
+                        CourseAssignment courseToRemove =
+                            instructorToUpdate.Courses
+                            .SingleOrDefault(i => i.CourseID == course.CourseID);
+                        _context.Remove(courseToRemove);
+                    }
+                }                
+
+            }//end foreach
+
         }
 
         // GET: Instructor/Delete/5
