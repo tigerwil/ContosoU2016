@@ -55,12 +55,39 @@ namespace ContosoU2016
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
+
+            /*
+             * ASP.NET Services can be configured with the following lifetimes:
+             * ===============
+             * == Transient ==
+             * ===============
+             * Transient lifetime services are created each time they are requested.
+             * This lifetime works best for lightweight, stateless services 
+             *           
+             * ================
+             * ==== Scoped ====
+             * ================ 
+             * Scoped lifetime services are created once per request
+             * 
+             * 
+             * ===============
+             * == Singleton ==
+             * =============== 
+             * Singleton lifetime services are created the first time they are requested
+             * (or when ConfigureServices is run if you specify the instance there) and
+             * then every subsequent request will use the same instance
+             * 
+             */
+
+            //mwilliams:  Service for Seeding admin user and roles
+            services.AddTransient<AdministratorSeedData>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, 
+        public async void Configure(IApplicationBuilder app, IHostingEnvironment env, 
             ILoggerFactory loggerFactory,
-            SchoolContext context)/*mwilliams add SchoolContext Middleware to the pipeline*/
+            SchoolContext context,/*mwilliams add SchoolContext Middleware to the pipeline*/
+            AdministratorSeedData seeder)/*mwilliams add AdminstratorSeed Middleware to pipeline */
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
@@ -90,7 +117,7 @@ namespace ContosoU2016
             });
 
             //Initialize the database with SEED data
-            DbInitializer.Initialize(context);
+            //DbInitializer.Initialize(context);
             /* The first time you run the application the database will be created and seeded with
              * test data.  Whenever you change your data model, you can delete the database, update
              * your seed method and start fresh with a new database the same way.
@@ -100,6 +127,9 @@ namespace ContosoU2016
              * 
              * 
              */
+
+            //Seed the Administrator and roles
+            await seeder.EnsureSeedData();
         }
     }
 }

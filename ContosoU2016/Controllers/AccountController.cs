@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using ContosoU2016.Models;
 using ContosoU2016.Models.AccountViewModels;
 using ContosoU2016.Services;
+using ContosoU2016.Data;
 
 namespace ContosoU2016.Controllers
 {
@@ -25,13 +26,17 @@ namespace ContosoU2016.Controllers
         private readonly ILogger _logger;
         private readonly string _externalCookieScheme;
 
+        //mwilliams:  Create SchoolContext (for students and instructors -Person Class)
+        private readonly SchoolContext _context;
+
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IOptions<IdentityCookieOptions> identityCookieOptions,
             IEmailSender emailSender,
             ISmsSender smsSender,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,//mwilliams 
+            SchoolContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -39,6 +44,7 @@ namespace ContosoU2016.Controllers
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
+            _context = context; //mwilliams
         }
 
         //
@@ -112,10 +118,29 @@ namespace ContosoU2016.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
+                //mwilliams:  Registered user must be already be a student (or professor)
+                Person instructorOrStudent =
+                    _context.People.Where(p => p.Email == model.Email).SingleOrDefault();
+                if (instructorOrStudent == null)
+                {
+                    //A person (student or instructor) is not on file - get OUT!!!!
+                    ModelState.AddModelError("", "Must be a student or instructor at the College");
+                    return View(model);
+                }
+
+                //stop code here for testing
+                //return View(model);
+                //end testing
+
+                //end mwilliams
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
+
+                    //TO DO:  mwilliams:  Assign user to student or instructor role
+
+
                     // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
                     // Send an email with this link
                     //var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
