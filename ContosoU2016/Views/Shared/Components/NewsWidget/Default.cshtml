@@ -1,0 +1,10 @@
+﻿@model List<ContosoU2016.Components.NewsItem>
+<div class="widget">
+    <h5>Recent News</h5>
+    <ul class="link-list">
+        @foreach(var item in Model)
+        {
+            <li><a asp-action="Index" asp-route-id="@item.Id">@item.Title</a></li>
+        }
+    </ul>
+</div>

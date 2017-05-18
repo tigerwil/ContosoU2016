@@ -81,6 +81,11 @@ namespace ContosoU2016
 
             //mwilliams:  Service for Seeding admin user and roles
             services.AddTransient<AdministratorSeedData>();
+
+            //mwilliams:  Service for News Widget
+            services.AddScoped<INewsService, NewsService>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
