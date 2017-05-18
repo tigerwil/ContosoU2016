@@ -155,4 +155,56 @@
 
     </div>
     @* End Programs Section *@
+
+    @* Faculty Search Section (admin only) 
+       Implementing Ajax Search  *@
+    @if(User.IsInRole("admin"))
+    {
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Faculty Search</div>
+                <div class="panel-body">
+                    <form asp-controller="Home" asp-action="FacultySearch"
+                          data-ajax="true"
+                          data-ajax-failure="searchFailed"
+                          data-ajax-loading="#ajax-loader"
+                          data-ajax-method="GET"
+                          data-ajax-mode="replace"
+                          data-ajax-update="#searchresults">
+                        <div class="col-md-4">
+                            <div class="form-inline">
+                                <input type="text" name="q" id="q"
+                                       class="form-control input-sm" />
+                                <button type="submit" name="search" id="search"
+                                        class="btn btn-info">
+                                    <i class="glyphicon glyphicon-chevron-right"></i> Search
+                                </button>
+                            </div>
+                            <div style="padding-top:1em">
+                                <img id="ajax-loader" style="display:none"
+                                     src="~/images/ajax-loader.gif" />
+                            </div>
+                        </div>
+                        <div class="col-md-8" id="searchresults">
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    }
 </div>
+@section scripts{
+    @*<script>
+        $(function () {
+            alert('dom is loaded!');
+        });
+    </script>*@
+    <script src="~/lib/jquery-ajax-unobtrusive/dist/jquery.unobtrusive-ajax.js"></script>
+    <script>
+        function searchFailed() {
+            $("#searchresults").html("Sorry, there was a problem with the search!")
+        }
+    </script>
+}

@@ -1,0 +1,12 @@
+﻿@model IEnumerable<ContosoU2016.Models.Instructor>
+<div id="results">
+    <ul>
+        @foreach(var item in Model)
+        {
+            <li>
+                <a asp-action="Details" asp-controller="Instructor"
+                   asp-route-id="@item.ID">@item.FullName</a>
+            </li>
+        }
+    </ul>
+</div>
