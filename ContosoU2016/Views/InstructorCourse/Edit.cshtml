@@ -1,0 +1,55 @@
+@model ContosoU2016.Models.Enrollment
+
+@{
+    ViewData["Title"] = "Edit Grade";
+}
+
+<h2>Edit Grade</h2>
+<hr />
+<h3>Student:  @Html.DisplayFor(model => model.Student.FullName)</h3>
+<h4>Course:  @Html.DisplayFor(model => model.Course.Title)</h4>
+@*  e=>e.EnrollmentID, e=>e.CourseID,  e => e.Grade, e=>e.StudentID *@
+<form asp-action="Edit">
+    <div class="form-horizontal">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="EnrollmentID" />
+        <input type="hidden" asp-for="CourseID" />
+        <input type="hidden" asp-for="StudentID" />
+        <div class="form-group">
+            <label for="Student_FullName" class="col-md-2 control-label">Student</label>
+            <div class="col-md-10">
+                <input asp-for="Student.FullName" class="form-control" readonly />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="Course_Title" class="col-md-2 control-label">Course</label>
+            <div class="col-md-10">
+                <input asp-for="Course.Title" class="form-control" readonly />
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="Grade" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <select asp-for="Grade" class="form-control"
+                        asp-items="Html.GetEnumSelectList<Grade>()">
+                    <option value="">No Grade</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+</form>
+
+<div>
+    @*<a asp-action="Index">Back to List</a>*@
+    <a asp-action="index" asp-route-courseID="@Model.CourseID">Back to List</a>
+
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

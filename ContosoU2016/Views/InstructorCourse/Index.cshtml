@@ -1,0 +1,65 @@
+@model List<ContosoU2016.Models.SchoolViewModels.InstructorCourseData>
+@{
+    ViewData["Title"] = "Instructor Courses";
+}
+
+<h2>Course List for professor:  @ViewData["Instructor"]</h2>
+
+<div class="top-buffer">
+    @{//check for number of items
+        int numItems = Model.Count();
+        if (numItems > 0)
+        {
+            <h4>@numItems Total Courses</h4>
+            @foreach (var item in Model)
+            {
+                <a asp-route-courseID="@item.CourseID">@item.CourseID &ndash; @item.Title</a><br />
+            }
+        }
+        else
+        {
+            <div class="alert alert-info" role="alert">
+                No course assignments yet!
+            </div>
+        }
+    }
+</div>
+@{
+    List<Enrollment> enrolled = ViewBag.enrolled;
+    if (enrolled != null)
+    {
+       
+        <div class="panel panel-primary top-buffer">
+            <div class="panel-heading">
+             <h3 class="panel-title">Students Enrolled in: @ViewData["Course"]</h3> 
+            </div>
+            <div class="panel-body">
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <th>Grade</th>
+                        <th></th>
+                    </tr>
+                    @foreach (var item in enrolled)
+                    {
+                    <tr>
+                        <td>@item.Student.FullName</td>
+                        <td>@Html.DisplayFor(modelItem => item.Grade)</td>
+                        <td>
+                            @if (String.IsNullOrEmpty(item.Grade.ToString()))
+                            {
+                               <a title="Add Grade" asp-action="Edit" asp-route-id="@item.EnrollmentID" class="ico-info"><i class="glyphicon glyphicon-plus-sign"></i>Add Grade</a>
+                            }
+                            else
+                            {
+                                <a title="Add Grade" asp-action="Edit" asp-route-id="@item.EnrollmentID" class="ico-info"><i class="glyphicon glyphicon-edit"></i>Edit Grade</a>
+                            }
+                        </td>
+                    </tr>
+                    }
+                </table>
+            </div>
+        </div>
+            }
+
+    }
