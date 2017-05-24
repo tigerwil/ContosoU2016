@@ -34,7 +34,7 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li is-active-route asp-controller="Home"><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
                     @await Html.PartialAsync("_MenuPartial")
                     @*<li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>*@
@@ -154,5 +154,34 @@
     </environment>
 
     @RenderSection("Scripts", required: false)
+
+    <script>
+        $(function () {
+            $("#search").autocomplete({
+                source: function (request, response) {
+                    $.getJSON("/Home/Autocomplete", request, function (data) { 
+                        response($.map(data, function (item) {
+                            return {
+                                label: item,
+                                value: item + ""
+                            }
+
+                        }))//end of response
+                    })//end of getJSON
+
+                },//end of source
+                select: function (event, ui) {
+                    //test
+                    //alert(ui.item.value);
+                    //end test
+                    $(this).parents('form').submit();
+
+                }//end of select
+
+            });//end of autocomplete
+
+        });//end of ready function
+
+    </script>
 </body>
 </html>

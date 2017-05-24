@@ -110,6 +110,17 @@ namespace ContosoU2016
 
             app.UseStaticFiles();
 
+            //mwilliams:  custom error pages
+            //app.UseStatusCodePages(); //show http error status code
+
+
+            //custom text message with error code 
+            //app.UseStatusCodePages("text/plain","Response from the server was status code: {0}");
+            //{0} is simply the status error code from the server, for example:  404
+
+
+            app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
             app.UseIdentity();
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715

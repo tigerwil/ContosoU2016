@@ -50,6 +50,25 @@ namespace ContosoU2016.Controllers
             return PartialView("_FacultySearch", faculty);
         }
 
+        public IActionResult Autocomplete(string term)
+        {
+            //testing
+            //var result = new[]
+            //{
+            //    "Action Script", "ASP", "Java", "Android", "HTML"
+            //};
+
+            //return Json(result
+            //    .Where(x => x.StartsWith(term, StringComparison.CurrentCultureIgnoreCase)).ToArray());
+            //end testing
+
+            var courses = _context.Courses
+                .Where(c => c.Title.Contains(term))
+                .Select(c => c.Title).ToList();
+
+            return Json(courses);
+        }
+
 
         public IActionResult Error()
         {

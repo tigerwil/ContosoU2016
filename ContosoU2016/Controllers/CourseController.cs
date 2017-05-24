@@ -198,6 +198,15 @@ namespace ContosoU2016.Controllers
             return View(await courses.ToListAsync());
         }
 
+        [AllowAnonymous]
+        public async Task<IActionResult>Search(string search)
+        {
+            var courses = _context.Courses.Where(c => c.Title.Contains(search));
+            ViewData["search"] = search; //to show what user searched for
+            return View(await courses.ToListAsync());
+        }
+
+
             private bool CourseExists(int id)
         {
             return _context.Courses.Any(e => e.CourseID == id);

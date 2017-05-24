@@ -1,0 +1,45 @@
+﻿<div class="page-header">
+    
+    @{ 
+        if (Model == 404)
+        {
+            ViewData["Title"] = "Page Not Found";
+            <h2>Page Not Found:  @Model</h2>
+            <h3 class="text-danger">We are sorry but the page you are looking for 
+                    does not exist.
+            </h3>
+            <p>You can return to the <a asp-action="Index"
+               asp-controller="Home">home</a> page.</p>
+               <div class="row text-center">
+                   <div class="glyphicon glyphicon-warning-sign"
+                        style="font-size:10em"></div>
+               </div>
+
+        }
+        else if (Model == 500)
+        {
+            ViewData["Title"] = "Internal Server Error";
+            <h2>Internal Server Error:  @Model</h2>
+            <h3 class="text-danger">
+                We are sorry but there was an internal server error,
+                try again later.
+            </h3>
+            <p>
+                You can return to the <a asp-action="Index"
+                                         asp-controller="Home">home</a> page.
+            </p>
+            <div class="row text-center">
+                <div class="glyphicon glyphicon-fire"
+                     style="font-size:10em"></div>
+            </div>
+        }
+        //else ...
+
+    }
+
+    <div class="row text-center">
+        <a asp-action="Index" asp-controller="Home" class="btn btn-primary btn-lg">
+            <span class="glyphicon glyphicon-hand-left"></span> Back to Homepage
+        </a>
+    </div>
+</div>
